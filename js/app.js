@@ -109,6 +109,13 @@ function applyTheme() {
   document.documentElement.style.setProperty("--reader-font-size", `${state.settings.fontSize}px`);
   document.documentElement.style.setProperty("--reader-margin", marginPadding(state.settings.margin));
   document.documentElement.classList.toggle("text-justified", state.settings.justified);
+  updateThemeQuickButtons();
+}
+
+function updateThemeQuickButtons() {
+  document.querySelectorAll("[data-theme-quick]").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.themeQuick === state.settings.theme);
+  });
 }
 
 async function init() {
@@ -157,6 +164,9 @@ function bindChrome() {
   document.querySelectorAll(".btn-open-settings").forEach((btn) => {
     btn.addEventListener("click", toggleSettingsSheet);
   });
+  document.querySelectorAll("[data-theme-quick]").forEach((btn) => {
+    btn.addEventListener("click", () => setTheme(btn.dataset.themeQuick));
+  });
   document.getElementById("btn-close-aa").addEventListener("click", () => {
     els.aaSheet.hidden = true;
   });
@@ -200,13 +210,7 @@ function bindAaControls() {
   });
 
   document.querySelectorAll("[data-theme-btn]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      state.settings.theme = btn.dataset.themeBtn;
-      document.querySelectorAll("[data-theme-btn]").forEach((b) => {
-        b.classList.toggle("active", b === btn);
-      });
-      persistSettingsAndRepaginate();
-    });
+    btn.addEventListener("click", () => setTheme(btn.dataset.themeBtn));
   });
 
   document.querySelectorAll("[data-margin-btn]").forEach((btn) => {
@@ -231,6 +235,14 @@ function bindAaControls() {
   document.querySelectorAll("[data-margin-btn]").forEach((b) => {
     b.classList.toggle("active", b.dataset.marginBtn === state.settings.margin);
   });
+}
+
+function setTheme(theme) {
+  state.settings.theme = theme;
+  document.querySelectorAll("[data-theme-btn]").forEach((b) => {
+    b.classList.toggle("active", b.dataset.themeBtn === theme);
+  });
+  persistSettingsAndRepaginate();
 }
 
 function persistSettingsAndRepaginate() {
