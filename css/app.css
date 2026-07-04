@@ -233,6 +233,18 @@ html[data-theme="night"] .book-row {
   flex-shrink: 0;
 }
 
+.top-bar__leading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.top-bar__leading .icon-btn {
+  padding: 5px 10px;
+  font-size: 0.78rem;
+}
+
 .theme-quick {
   display: flex;
   align-items: center;

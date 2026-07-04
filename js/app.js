@@ -1,4 +1,4 @@
-import { ABOUT_CONTENT } from "./about.js";
+import { ABOUT_CONTENT, GUIDE_CONTENT } from "./about.js";
 import { loadBooks, getBook, getAdjacentChapter } from "./books.js";
 import { fetchMergedChapter, fetchMergedPassage } from "./bible-data.js";
 import {
@@ -49,6 +49,8 @@ const els = {
   notebookList: document.getElementById("notebook-list"),
   aboutSheet: document.getElementById("about-sheet"),
   aboutContent: document.getElementById("about-content"),
+  guideSheet: document.getElementById("guide-sheet"),
+  guideContent: document.getElementById("guide-content"),
   aaSheetTitle: document.getElementById("aa-sheet-title"),
   aaReaderOnly: document.getElementById("aa-reader-only"),
   planDashboard: document.getElementById("plan-dashboard"),
@@ -119,6 +121,7 @@ function routeToPath(route) {
 
 function navigate(route) {
   if (els.aboutSheet) els.aboutSheet.hidden = true;
+  if (els.guideSheet) els.guideSheet.hidden = true;
   if (els.aaSheet) els.aaSheet.hidden = true;
   const path = routeToPath(route);
   if (location.hash !== path) location.hash = path;
@@ -196,10 +199,19 @@ function bindChrome() {
   document.getElementById("btn-back-home").addEventListener("click", () => navigate({ name: "library" }));
   document.getElementById("btn-about").addEventListener("click", () => {
     renderAboutSheet();
+    els.guideSheet.hidden = true;
     els.aboutSheet.hidden = false;
   });
   document.getElementById("btn-close-about").addEventListener("click", () => {
     els.aboutSheet.hidden = true;
+  });
+  document.getElementById("btn-guide").addEventListener("click", () => {
+    renderGuideSheet();
+    els.aboutSheet.hidden = true;
+    els.guideSheet.hidden = false;
+  });
+  document.getElementById("btn-close-guide").addEventListener("click", () => {
+    els.guideSheet.hidden = true;
   });
   document.getElementById("btn-back-library").addEventListener("click", () => navigate({ name: "library" }));
   document.getElementById("btn-back-chapters").addEventListener("click", () => {
@@ -414,6 +426,20 @@ function renderAboutSheet() {
       `;
     })
     .join("");
+}
+
+function renderGuideSheet() {
+  if (!els.guideContent) return;
+
+  els.guideContent.innerHTML = GUIDE_CONTENT.map((section) => {
+    const points = section.points.map((p) => `<li>${escapeHtml(p)}</li>`).join("");
+    return `
+      <article class="about-block">
+        <h3>${escapeHtml(section.title)}</h3>
+        <ul>${points}</ul>
+      </article>
+    `;
+  }).join("");
 }
 
 function renderChapters(bookId) {

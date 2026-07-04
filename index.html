@@ -24,7 +24,10 @@
   <!-- Library -->
   <div class="screen" data-screen="library">
     <header class="top-bar top-bar--library">
-      <button type="button" id="btn-about" class="icon-btn" aria-label="About these translations">Info</button>
+      <div class="top-bar__leading">
+        <button type="button" id="btn-guide" class="icon-btn" aria-label="How to use this app">Guide</button>
+        <button type="button" id="btn-about" class="icon-btn" aria-label="About the Bible versions">Versions</button>
+      </div>
       <div class="top-bar__center">
         <h1 class="app-title">Holy Bible</h1>
         <p class="app-subtitle app-subtitle--urdu" dir="rtl" lang="ur">کتابِ مقدّس</p>
@@ -154,10 +157,19 @@
   <!-- About translations -->
   <div id="about-sheet" class="about-sheet" hidden>
     <div class="about-sheet__header">
-      <h2>About these translations</h2>
+      <h2>About the Bible versions</h2>
       <button type="button" id="btn-close-about" class="icon-btn">Close</button>
     </div>
     <div id="about-content" class="about-sheet__body"></div>
+  </div>
+
+  <!-- How to use guide -->
+  <div id="guide-sheet" class="about-sheet" hidden>
+    <div class="about-sheet__header">
+      <h2>How to use this app</h2>
+      <button type="button" id="btn-close-guide" class="icon-btn">Close</button>
+    </div>
+    <div id="guide-content" class="about-sheet__body"></div>
   </div>
 
   <script type="module" src="js/app.js"></script>
