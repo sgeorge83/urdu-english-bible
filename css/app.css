@@ -95,6 +95,33 @@ body[data-screen="reader"] {
   font-family: var(--font-urdu);
   font-size: 1rem;
   color: var(--text);
+  line-height: 1.9;
+}
+
+/* Phones: give the title its own full-width row so it never overlaps the buttons */
+@media (max-width: 640px) {
+  .top-bar--library {
+    flex-wrap: wrap;
+    row-gap: 10px;
+    justify-content: center;
+    padding-bottom: 14px;
+  }
+
+  .top-bar--library .top-bar__center {
+    order: -1;
+    flex: 1 1 100%;
+  }
+
+  .top-bar--library .top-bar__leading {
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .top-bar--library .top-bar__actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 6px;
+  }
 }
 
 .icon-btn,
