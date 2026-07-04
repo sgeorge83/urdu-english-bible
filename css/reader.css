@@ -152,7 +152,12 @@
   opacity: 0.35;
 }
 
-.page-nav:hover {
+.page-nav:disabled {
+  cursor: default;
+  pointer-events: none;
+}
+
+.page-nav:not(:disabled):hover {
   opacity: 0.8;
 }
 

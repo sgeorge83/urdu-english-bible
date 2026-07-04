@@ -1,4 +1,4 @@
-const CACHE_NAME = "urdu-english-bible-v1";
+const CACHE_NAME = "urdu-english-bible-v2";
 const APP_SHELL = [
   "./",
   "./index.html",

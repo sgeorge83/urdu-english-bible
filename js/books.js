@@ -46,3 +46,33 @@ export async function loadBooks() {
 export function getBook(books, bookId) {
   return books.find((b) => b.id === bookId) ?? null;
 }
+
+/**
+ * Next/previous chapter for continuous reading.
+ * Crosses book boundaries (e.g. John 21 → Acts 1).
+ * Returns null at Genesis 1 (prev) or Revelation 22 (next).
+ */
+export function getAdjacentChapter(books, bookId, chapter, direction) {
+  const book = getBook(books, bookId);
+  if (!book) return null;
+
+  if (direction === "next") {
+    if (chapter < book.chapterCount) {
+      return { bookId, chapter: chapter + 1, startPage: "first" };
+    }
+    const nextBook = getBook(books, bookId + 1);
+    if (nextBook) {
+      return { bookId: nextBook.id, chapter: 1, startPage: "first" };
+    }
+    return null;
+  }
+
+  if (chapter > 1) {
+    return { bookId, chapter: chapter - 1, startPage: "last" };
+  }
+  const prevBook = getBook(books, bookId - 1);
+  if (prevBook) {
+    return { bookId: prevBook.id, chapter: prevBook.chapterCount, startPage: "last" };
+  }
+  return null;
+}

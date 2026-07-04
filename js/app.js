@@ -1,4 +1,4 @@
-import { loadBooks, getBook } from "./books.js";
+import { loadBooks, getBook, getAdjacentChapter } from "./books.js";
 import { fetchMergedChapter } from "./bible-data.js";
 import {
   addHighlight,
@@ -9,7 +9,7 @@ import {
 import { paginateVerses } from "./pagination.js";
 import { countWordsInVerses, readingStats } from "./progress.js";
 import { ENGLISH_BOOK_NAMES } from "./config.js";
-import { loadSettings, saveSettings, marginPadding, DEFAULT_SETTINGS } from "./settings.js";
+import { loadSettings, saveSettings, marginPadding } from "./settings.js";
 
 const HIGHLIGHT_COLORS = [
   { id: "yellow", value: "rgba(255, 214, 102, 0.45)" },
@@ -26,6 +26,7 @@ const state = {
   pageIndex: 0,
   highlights: new Map(),
   totalWords: 0,
+  startPage: "first",
 };
 
 const els = {
@@ -314,8 +315,16 @@ async function renderReader(bookId, chapter) {
     state.chapter = await fetchMergedChapter(bookId, chapter);
     await loadChapterHighlights(bookId, chapter);
     state.totalWords = countWordsInVerses(state.chapter.verses);
-    state.pageIndex = 0;
     repaginate();
+    if (state.startPage === "last") {
+      state.pageIndex = Math.max(0, state.pages.length - 1);
+    } else {
+      state.pageIndex = 0;
+    }
+    state.startPage = "first";
+    renderPages();
+    updateFooter();
+    updateNavButtons();
   } catch (err) {
     setError(err.message || "Failed to load chapter");
   } finally {
@@ -352,6 +361,7 @@ function repaginate() {
 
   renderPages();
   updateFooter();
+  updateNavButtons();
 }
 
 function renderPages() {
@@ -367,14 +377,53 @@ function renderPages() {
   els.pageTrack.style.transform = `translateX(-${state.pageIndex * 100}%)`;
 }
 
+function goAdjacentChapter(direction) {
+  if (state.route.name !== "read") return;
+  const adj = getAdjacentChapter(
+    state.books,
+    state.route.bookId,
+    state.route.chapter,
+    direction
+  );
+  if (!adj) return;
+  state.startPage = adj.startPage;
+  navigate({ name: "read", bookId: adj.bookId, chapter: adj.chapter });
+}
+
+function updateNavButtons() {
+  const prevBtn = document.getElementById("btn-prev-page");
+  const nextBtn = document.getElementById("btn-next-page");
+  if (!prevBtn || !nextBtn || state.route.name !== "read") return;
+
+  const hasPrev =
+    state.pageIndex > 0 ||
+    getAdjacentChapter(state.books, state.route.bookId, state.route.chapter, "prev");
+  const hasNext =
+    state.pageIndex < state.pages.length - 1 ||
+    getAdjacentChapter(state.books, state.route.bookId, state.route.chapter, "next");
+
+  prevBtn.disabled = !hasPrev;
+  nextBtn.disabled = !hasNext;
+  prevBtn.style.opacity = hasPrev ? "0.35" : "0.12";
+  nextBtn.style.opacity = hasNext ? "0.35" : "0.12";
+}
+
 function goPage(index) {
-  if (index < 0 || index >= state.pages.length) return;
+  if (index >= state.pages.length) {
+    goAdjacentChapter("next");
+    return;
+  }
+  if (index < 0) {
+    goAdjacentChapter("prev");
+    return;
+  }
   state.pageIndex = index;
   els.pageTrack.querySelectorAll(".reader-page").forEach((p, i) => {
     p.classList.toggle("reader-page--active", i === index);
   });
   els.pageTrack.style.transform = `translateX(-${index * 100}%)`;
   updateFooter();
+  updateNavButtons();
 }
 
 function updateFooter() {
