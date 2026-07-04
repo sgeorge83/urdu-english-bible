@@ -28,7 +28,10 @@
         <h1 class="app-title">Holy Bible</h1>
         <p class="app-subtitle app-subtitle--urdu" dir="rtl" lang="ur">کتابِ مقدّس</p>
       </div>
-      <button type="button" id="btn-notebook" class="icon-btn">Notebook</button>
+      <div class="top-bar__actions">
+        <button type="button" class="aa-btn btn-open-settings" aria-label="Reading settings">Aa</button>
+        <button type="button" id="btn-notebook" class="icon-btn">Notebook</button>
+      </div>
     </header>
     <main id="library-list" class="library-list"></main>
     <footer class="site-footer">
@@ -45,6 +48,7 @@
         <h2 id="chapter-title" class="chapter-title"></h2>
         <p id="chapter-subtitle" class="chapter-subtitle"></p>
       </div>
+      <button type="button" class="aa-btn btn-open-settings" aria-label="Reading settings">Aa</button>
     </header>
     <main id="chapter-grid" class="chapter-grid"></main>
   </div>
@@ -57,7 +61,7 @@
         <div id="reader-header-en" class="reader-bar__en"></div>
         <div id="reader-header-ur" class="reader-bar__ur" dir="rtl" lang="ur"></div>
       </div>
-      <button type="button" id="btn-aa" class="aa-btn" aria-label="Reading settings">Aa</button>
+      <button type="button" id="btn-aa" class="aa-btn btn-open-settings" aria-label="Reading settings">Aa</button>
     </header>
 
     <div id="reader-shell" class="reader-shell">
@@ -72,23 +76,38 @@
     </div>
 
     <footer id="reader-footer" class="reader-footer"></footer>
+  </div>
 
-    <div id="aa-sheet" class="aa-sheet" hidden>
-      <div class="aa-sheet__header">
-        <h2>Reading settings</h2>
-        <button type="button" id="btn-close-aa" class="icon-btn">Close</button>
+  <!-- Notebook -->
+  <div class="screen" data-screen="notebook" hidden>
+    <header class="top-bar">
+      <button type="button" id="btn-back-home" class="back-btn">← Home</button>
+      <div class="top-bar__center">
+        <h2 class="chapter-title">My Notebook</h2>
       </div>
+      <button type="button" class="aa-btn btn-open-settings" aria-label="Reading settings">Aa</button>
+    </header>
+    <main id="notebook-list" class="notebook-list"></main>
+  </div>
+
+  <!-- Reading settings (global) -->
+  <div id="aa-sheet" class="aa-sheet" hidden>
+    <div class="aa-sheet__header">
+      <h2 id="aa-sheet-title">Reading settings</h2>
+      <button type="button" id="btn-close-aa" class="icon-btn">Close</button>
+    </div>
+    <p class="aa-label">Theme</p>
+    <div class="aa-btn-row">
+      <button type="button" data-theme-btn="day" class="chip">Day</button>
+      <button type="button" data-theme-btn="sepia" class="chip active">Sepia</button>
+      <button type="button" data-theme-btn="night" class="chip">Night</button>
+    </div>
+    <div id="aa-reader-only" class="aa-reader-only">
       <label class="aa-row">
         <span>Font size</span>
         <span id="font-size-label">17px</span>
       </label>
       <input type="range" id="font-size" min="14" max="26" step="1" value="17">
-      <p class="aa-label">Theme</p>
-      <div class="aa-btn-row">
-        <button type="button" data-theme-btn="day" class="chip">Day</button>
-        <button type="button" data-theme-btn="sepia" class="chip active">Sepia</button>
-        <button type="button" data-theme-btn="night" class="chip">Night</button>
-      </div>
       <p class="aa-label">Margins</p>
       <div class="aa-btn-row">
         <button type="button" data-margin-btn="tight" class="chip">Tight</button>
@@ -100,17 +119,6 @@
         <input type="checkbox" id="justify-toggle" checked>
       </label>
     </div>
-  </div>
-
-  <!-- Notebook -->
-  <div class="screen" data-screen="notebook" hidden>
-    <header class="top-bar">
-      <button type="button" id="btn-back-home" class="back-btn">← Home</button>
-      <div class="top-bar__center">
-        <h2 class="chapter-title">My Notebook</h2>
-      </div>
-    </header>
-    <main id="notebook-list" class="notebook-list"></main>
   </div>
 
   <!-- About translations -->

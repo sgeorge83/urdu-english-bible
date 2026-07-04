@@ -226,23 +226,42 @@ html[data-theme="night"] .book-row {
   color: var(--text-muted);
 }
 
+.top-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.aa-btn {
+  font: inherit;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--bar-border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .chapter-grid {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 5px;
-  padding: 10px 12px 20px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+  padding: 12px 14px 20px;
   flex: 1;
   overflow: auto;
   align-content: start;
 }
 
 .chapter-cell {
-  min-height: 34px;
-  padding: 4px 2px;
+  min-height: 42px;
+  padding: 6px 4px;
   border: 1px solid var(--bar-border);
-  border-radius: 7px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.35);
-  font-size: 0.8rem;
+  font-size: 0.92rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
@@ -336,7 +355,7 @@ html[data-theme="night"] .notebook-card {
   background: var(--bar-bg);
   border-top: 1px solid var(--bar-border);
   border-radius: 16px 16px 0 0;
-  z-index: 50;
+  z-index: 55;
 }
 
 .aa-sheet[hidden] {
@@ -412,6 +431,14 @@ html[data-theme="night"] .notebook-card {
   color: var(--text);
 }
 
+.aa-reader-only[hidden] {
+  display: none;
+}
+
+.aa-reader-only {
+  margin-top: 4px;
+}
+
 .aa-sheet__header {
   display: flex;
   justify-content: space-between;
@@ -467,7 +494,8 @@ input[type="range"] {
   .library-list,
   .chapter-grid,
   .notebook-list,
-  .about-sheet {
+  .about-sheet,
+  .aa-sheet {
     max-width: 720px;
     margin-left: auto;
     margin-right: auto;
@@ -475,10 +503,10 @@ input[type="range"] {
   }
 
   .chapter-grid {
-    grid-template-columns: repeat(10, minmax(0, 1fr));
-    max-width: 440px;
-    gap: 6px;
-    padding-top: 12px;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    max-width: 560px;
+    gap: 8px;
+    padding-top: 14px;
   }
 
   .book-grid {
@@ -488,7 +516,7 @@ input[type="range"] {
 
 @media (max-width: 360px) {
   .chapter-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 

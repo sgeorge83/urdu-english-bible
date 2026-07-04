@@ -32,17 +32,6 @@
   margin-top: 2px;
 }
 
-.aa-btn {
-  font: inherit;
-  font-weight: 700;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--bar-border);
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-}
-
 .reader-shell {
   position: relative;
   flex: 1;

@@ -46,6 +46,8 @@ const els = {
   notebookList: document.getElementById("notebook-list"),
   aboutSheet: document.getElementById("about-sheet"),
   aboutContent: document.getElementById("about-content"),
+  aaSheetTitle: document.getElementById("aa-sheet-title"),
+  aaReaderOnly: document.getElementById("aa-reader-only"),
   loader: document.getElementById("global-loader"),
   error: document.getElementById("global-error"),
 };
@@ -67,6 +69,7 @@ function parseRoute() {
 
 function navigate(route) {
   if (els.aboutSheet) els.aboutSheet.hidden = true;
+  if (els.aaSheet) els.aaSheet.hidden = true;
   const path =
     route.name === "read"
       ? `#/read/${route.bookId}/${route.chapter}`
@@ -151,8 +154,8 @@ function bindChrome() {
       navigate({ name: "book", bookId: state.route.bookId });
     }
   });
-  document.getElementById("btn-aa").addEventListener("click", () => {
-    els.aaSheet.hidden = !els.aaSheet.hidden;
+  document.querySelectorAll(".btn-open-settings").forEach((btn) => {
+    btn.addEventListener("click", toggleSettingsSheet);
   });
   document.getElementById("btn-close-aa").addEventListener("click", () => {
     els.aaSheet.hidden = true;
@@ -169,6 +172,22 @@ function bindChrome() {
 
   setupSwipe(els.pageTrack);
   setupLongPress(els.pageTrack);
+}
+
+function toggleSettingsSheet() {
+  updateSettingsSheetMode();
+  els.aaSheet.hidden = !els.aaSheet.hidden;
+}
+
+function updateSettingsSheetMode() {
+  const isReader = state.route.name === "read";
+  if (els.aaReaderOnly) els.aaReaderOnly.hidden = !isReader;
+  if (els.aaSheetTitle) {
+    els.aaSheetTitle.textContent = isReader ? "Reading settings" : "Display theme";
+  }
+  document.querySelectorAll(".btn-open-settings").forEach((btn) => {
+    btn.setAttribute("aria-label", isReader ? "Reading settings" : "Display theme");
+  });
 }
 
 function bindAaControls() {
@@ -225,6 +244,7 @@ function persistSettingsAndRepaginate() {
 async function render() {
   setError("");
   applyTheme();
+  updateSettingsSheetMode();
 
   if (state.route.name === "library") {
     showScreen("library");
