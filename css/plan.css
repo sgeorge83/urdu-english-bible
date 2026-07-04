@@ -184,6 +184,18 @@ html[data-theme="night"] .plan-passage-card {
   cursor: default;
 }
 
+.offline-card {
+  margin-top: 8px;
+}
+
+.offline-card h3 {
+  font-size: 0.95rem;
+}
+
+.offline-card .plan-progress {
+  margin-top: 10px;
+}
+
 @media (min-width: 768px) {
   .plan-dashboard,
   .plan-day-content {

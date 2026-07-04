@@ -34,6 +34,14 @@ export const GUIDE_CONTENT = [
       "You can restart the plan from Day 1 at any time using the restart button on the plan screen.",
     ],
   },
+  {
+    title: "Read offline",
+    points: [
+      "Scroll to the bottom of the home screen and tap Download full Bible to save all 66 books in both languages on your device (about 6 MB).",
+      "After the one-time download, every chapter, your notebook, and the reading plan work completely without internet.",
+      "If the download is interrupted, tap Resume and it continues from where it stopped.",
+    ],
+  },
 ];
 
 export const ABOUT_CONTENT = {

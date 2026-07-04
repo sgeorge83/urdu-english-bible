@@ -9,6 +9,7 @@ import {
   removeHighlight,
 } from "./highlights.js";
 import { paginateVerses } from "./pagination.js";
+import { downloadFullBible, isOfflineDownloaded } from "./offline-download.js";
 import { getStats, isDayComplete, markDayComplete, resetPlan, startPlan } from "./plan-progress.js";
 import { countWordsInVerses, readingStats } from "./progress.js";
 import { getPlanDay, getPlanMeta, getSectionByKey, loadPlan } from "./reading-plan.js";
@@ -371,6 +372,66 @@ function renderLibrary() {
 
   els.libraryList.appendChild(buildTestamentSection("Old Testament", "پُرانا عہدنامہ", otBooks));
   els.libraryList.appendChild(buildTestamentSection("New Testament", "نیا عہدنامہ", ntBooks));
+  els.libraryList.appendChild(buildOfflineCard());
+}
+
+function buildOfflineCard() {
+  const card = document.createElement("article");
+  card.className = "plan-card offline-card";
+
+  if (isOfflineDownloaded()) {
+    card.innerHTML = `
+      <h3>✓ Available offline</h3>
+      <p>The complete Bible is downloaded to this device. You can read every chapter in both languages without an internet connection.</p>
+    `;
+    return card;
+  }
+
+  card.innerHTML = `
+    <h3>Download for offline use</h3>
+    <p>Save the complete Bible — all 66 books in Urdu and English — on this device (about 6 MB). After that, everything works without internet.</p>
+    <div class="plan-progress" id="offline-progress" hidden>
+      <div class="plan-progress__bar">
+        <div class="plan-progress__fill" id="offline-progress-fill" style="width:0%"></div>
+      </div>
+      <p class="plan-progress__text" id="offline-progress-text"></p>
+    </div>
+    <div class="plan-actions">
+      <button type="button" class="plan-btn plan-btn--primary" id="btn-offline-download">Download full Bible</button>
+    </div>
+  `;
+
+  const btn = card.querySelector("#btn-offline-download");
+  btn.addEventListener("click", async () => {
+    if (!navigator.onLine) {
+      setError("You are offline. Connect to the internet to download the Bible.");
+      return;
+    }
+
+    const progressWrap = card.querySelector("#offline-progress");
+    const fill = card.querySelector("#offline-progress-fill");
+    const text = card.querySelector("#offline-progress-text");
+
+    btn.disabled = true;
+    btn.textContent = "Downloading…";
+    progressWrap.hidden = false;
+
+    try {
+      await downloadFullBible((done, total) => {
+        const percent = Math.round((done / total) * 100);
+        fill.style.width = `${percent}%`;
+        text.textContent = `${done} of ${total} chapters downloaded (${percent}%)`;
+      });
+      renderLibrary();
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = "Resume download";
+      text.textContent = "Download interrupted — tap Resume to continue where it stopped.";
+      setError(err.message || "Download failed. Check your connection and try again.");
+    }
+  });
+
+  return card;
 }
 
 function buildTestamentSection(titleEn, titleUr, books) {
