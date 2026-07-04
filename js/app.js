@@ -1,3 +1,4 @@
+import { ABOUT_CONTENT } from "./about.js";
 import { loadBooks, getBook, getAdjacentChapter } from "./books.js";
 import { fetchMergedChapter } from "./bible-data.js";
 import {
@@ -43,6 +44,8 @@ const els = {
   measure: document.getElementById("measure"),
   aaSheet: document.getElementById("aa-sheet"),
   notebookList: document.getElementById("notebook-list"),
+  aboutSheet: document.getElementById("about-sheet"),
+  aboutContent: document.getElementById("about-content"),
   loader: document.getElementById("global-loader"),
   error: document.getElementById("global-error"),
 };
@@ -63,6 +66,7 @@ function parseRoute() {
 }
 
 function navigate(route) {
+  if (els.aboutSheet) els.aboutSheet.hidden = true;
   const path =
     route.name === "read"
       ? `#/read/${route.bookId}/${route.chapter}`
@@ -133,6 +137,14 @@ async function init() {
 
 function bindChrome() {
   document.getElementById("btn-notebook").addEventListener("click", () => navigate({ name: "notebook" }));
+  document.getElementById("btn-back-home").addEventListener("click", () => navigate({ name: "library" }));
+  document.getElementById("btn-about").addEventListener("click", () => {
+    renderAboutSheet();
+    els.aboutSheet.hidden = false;
+  });
+  document.getElementById("btn-close-about").addEventListener("click", () => {
+    els.aboutSheet.hidden = true;
+  });
   document.getElementById("btn-back-library").addEventListener("click", () => navigate({ name: "library" }));
   document.getElementById("btn-back-chapters").addEventListener("click", () => {
     if (state.route.name === "read") {
@@ -240,31 +252,67 @@ async function render() {
 
 function renderLibrary() {
   els.libraryList.innerHTML = "";
-  const otHeading = document.createElement("h2");
-  otHeading.className = "section-label";
-  otHeading.textContent = "Old Testament";
-  els.libraryList.appendChild(otHeading);
 
-  let currentSection = "ot";
-  for (const book of state.books) {
-    if (book.testament === "nt" && currentSection === "ot") {
-      const ntHeading = document.createElement("h2");
-      ntHeading.className = "section-label";
-      ntHeading.textContent = "New Testament";
-      els.libraryList.appendChild(ntHeading);
-      currentSection = "nt";
-    }
+  const otBooks = state.books.filter((b) => b.testament === "ot");
+  const ntBooks = state.books.filter((b) => b.testament === "nt");
 
+  els.libraryList.appendChild(buildTestamentSection("Old Testament", "پُرانا عہدنامہ", otBooks));
+  els.libraryList.appendChild(buildTestamentSection("New Testament", "نیا عہدنامہ", ntBooks));
+}
+
+function buildTestamentSection(titleEn, titleUr, books) {
+  const section = document.createElement("section");
+  section.className = "testament-section";
+
+  const heading = document.createElement("div");
+  heading.className = "section-heading";
+  heading.innerHTML = `
+    <h2 class="section-label">${escapeHtml(titleEn)}</h2>
+    <p class="section-label-urdu" dir="rtl" lang="ur">${escapeHtml(titleUr)}</p>
+  `;
+  section.appendChild(heading);
+
+  const grid = document.createElement("div");
+  grid.className = "book-grid";
+
+  for (const book of books) {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "book-row";
+    btn.className = "book-cell";
     btn.innerHTML = `
-      <span class="book-row__english">${escapeHtml(book.nameEnglish)}</span>
-      <span class="book-row__urdu" dir="rtl" lang="ur">${escapeHtml(book.nameUrdu)}</span>
+      <span class="book-cell__english">${escapeHtml(book.nameEnglish)}</span>
+      <span class="book-cell__urdu" dir="rtl" lang="ur">${escapeHtml(book.nameUrdu)}</span>
     `;
     btn.addEventListener("click", () => navigate({ name: "book", bookId: book.id }));
-    els.libraryList.appendChild(btn);
+    grid.appendChild(btn);
   }
+
+  section.appendChild(grid);
+  return section;
+}
+
+function renderAboutSheet() {
+  if (!els.aboutContent) return;
+
+  const blocks = [ABOUT_CONTENT.urdu, ABOUT_CONTENT.english];
+  els.aboutContent.innerHTML = blocks
+    .map((block) => {
+      const urduTitle =
+        block.titleUrdu
+          ? `<p class="about-block__urdu-title" dir="rtl" lang="ur">${escapeHtml(block.titleUrdu)}</p>`
+          : "";
+      const points = block.points.map((p) => `<li>${escapeHtml(p)}</li>`).join("");
+      return `
+        <article class="about-block">
+          <h3>${escapeHtml(block.title)}</h3>
+          ${urduTitle}
+          <p class="about-meta">${escapeHtml(block.year)} · ${escapeHtml(block.license)}</p>
+          <ul>${points}</ul>
+          <a class="about-link" href="${escapeHtml(block.link)}" target="_blank" rel="noopener noreferrer">Learn more</a>
+        </article>
+      `;
+    })
+    .join("");
 }
 
 function renderChapters(bookId) {
@@ -312,6 +360,7 @@ async function renderReader(bookId, chapter) {
 
   try {
     setLoading(true);
+    els.readerShell?.classList.add("reader-shell--changing");
     state.chapter = await fetchMergedChapter(bookId, chapter);
     await loadChapterHighlights(bookId, chapter);
     state.totalWords = countWordsInVerses(state.chapter.verses);
@@ -329,6 +378,9 @@ async function renderReader(bookId, chapter) {
     setError(err.message || "Failed to load chapter");
   } finally {
     setLoading(false);
+    requestAnimationFrame(() => {
+      els.readerShell?.classList.remove("reader-shell--changing");
+    });
   }
 }
 
@@ -370,7 +422,7 @@ function renderPages() {
     const page = document.createElement("div");
     page.className = "reader-page";
     page.dataset.page = String(index);
-    page.innerHTML = html;
+    page.innerHTML = `<div class="reader-page-inner">${html}</div>`;
     if (index === state.pageIndex) page.classList.add("reader-page--active");
     els.pageTrack.appendChild(page);
   });
@@ -386,6 +438,7 @@ function goAdjacentChapter(direction) {
     direction
   );
   if (!adj) return;
+  els.readerShell?.classList.add("reader-shell--changing");
   state.startPage = adj.startPage;
   navigate({ name: "read", bookId: adj.bookId, chapter: adj.chapter });
 }

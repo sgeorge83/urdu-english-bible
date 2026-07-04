@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#f4ecd8">
   <meta name="description" content="Bilingual Bible reader — Urdu Geo and World English Bible, verse by verse">
-  <title>Urdu English Bible</title>
+  <title>Holy Bible · کتابِ مقدّس</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -22,10 +22,11 @@
 
   <!-- Library -->
   <div class="screen" data-screen="library">
-    <header class="top-bar">
-      <div>
-        <h1 class="app-title">Urdu English Bible</h1>
-        <p class="app-subtitle">Urdu Geo · World English Bible</p>
+    <header class="top-bar top-bar--library">
+      <button type="button" id="btn-about" class="icon-btn" aria-label="About these translations">Info</button>
+      <div class="top-bar__center">
+        <h1 class="app-title">Holy Bible</h1>
+        <p class="app-subtitle app-subtitle--urdu" dir="rtl" lang="ur">کتابِ مقدّس</p>
       </div>
       <button type="button" id="btn-notebook" class="icon-btn">Notebook</button>
     </header>
@@ -104,10 +105,21 @@
   <!-- Notebook -->
   <div class="screen" data-screen="notebook" hidden>
     <header class="top-bar">
-      <button type="button" class="back-btn" onclick="location.hash='#/'">← Reader</button>
-      <h2 class="chapter-title">My Notebook</h2>
+      <button type="button" id="btn-back-home" class="back-btn">← Home</button>
+      <div class="top-bar__center">
+        <h2 class="chapter-title">My Notebook</h2>
+      </div>
     </header>
     <main id="notebook-list" class="notebook-list"></main>
+  </div>
+
+  <!-- About translations -->
+  <div id="about-sheet" class="about-sheet" hidden>
+    <div class="about-sheet__header">
+      <h2>About these translations</h2>
+      <button type="button" id="btn-close-about" class="icon-btn">Close</button>
+    </div>
+    <div id="about-content" class="about-sheet__body"></div>
   </div>
 
   <script type="module" src="js/app.js"></script>

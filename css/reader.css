@@ -50,6 +50,10 @@
   overflow: hidden;
 }
 
+.reader-shell--changing .reader-viewport {
+  opacity: 0.35;
+}
+
 .measure-host {
   position: absolute;
   left: -9999px;
@@ -59,17 +63,25 @@
   height: 100%;
   visibility: hidden;
   pointer-events: none;
+  overflow: hidden;
 }
 
-.measure-column,
+.measure-column {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 .reader-page-inner {
   padding: var(--reader-margin);
   width: 100%;
+  box-sizing: border-box;
 }
 
 .reader-viewport {
   height: 100%;
   overflow: hidden;
+  transition: opacity 0.22s ease;
 }
 
 .page-track {
@@ -85,7 +97,6 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  padding: var(--reader-margin);
 }
 
 .verse-pair {
@@ -184,7 +195,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-track {
+  .page-track,
+  .reader-viewport {
     transition: none;
   }
 }

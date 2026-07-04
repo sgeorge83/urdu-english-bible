@@ -41,6 +41,10 @@ export function buildVerseElement(verse, settings, highlightColor) {
   return el;
 }
 
+function pageHasContent(inner) {
+  return inner.querySelector(".verse-pair") !== null;
+}
+
 export function paginateVerses(verses, measureEl, pageHeight, settings, highlightMap) {
   measureEl.innerHTML = "";
   measureEl.style.setProperty("--reader-font-size", `${settings.fontSize}px`);
@@ -48,30 +52,32 @@ export function paginateVerses(verses, measureEl, pageHeight, settings, highligh
   measureEl.classList.toggle("text-justified", settings.justified);
 
   const pages = [];
-  let currentPage = document.createElement("div");
-  currentPage.className = "reader-page-inner";
-  measureEl.appendChild(currentPage);
+  let inner = document.createElement("div");
+  inner.className = "reader-page-inner";
+  measureEl.appendChild(inner);
+
+  const usableHeight = Math.max(pageHeight - 4, 120);
 
   for (const verse of verses) {
     const color = highlightMap?.get(verse.verse);
     const block = buildVerseElement(verse, settings, color);
-    currentPage.appendChild(block);
+    inner.appendChild(block);
 
-    if (measureEl.scrollHeight > pageHeight && currentPage.childElementCount > 1) {
-      currentPage.removeChild(block);
-      pages.push(currentPage.innerHTML);
-      currentPage = document.createElement("div");
-      currentPage.className = "reader-page-inner";
+    while (inner.scrollHeight > usableHeight && inner.childElementCount > 1) {
+      inner.removeChild(block);
+      pages.push(inner.innerHTML);
+      inner = document.createElement("div");
+      inner.className = "reader-page-inner";
       measureEl.innerHTML = "";
-      measureEl.appendChild(currentPage);
-      currentPage.appendChild(block);
+      measureEl.appendChild(inner);
+      inner.appendChild(block);
     }
   }
 
-  if (currentPage.childElementCount > 0) {
-    pages.push(currentPage.innerHTML);
+  if (pageHasContent(inner)) {
+    pages.push(inner.innerHTML);
   }
 
   measureEl.innerHTML = "";
-  return pages.length ? pages : ['<div class="reader-page-inner"></div>'];
+  return pages.length ? pages : [];
 }
