@@ -81,6 +81,10 @@ export async function getPlanProgress() {
   return readProgress();
 }
 
+export async function resetPlan() {
+  return writeProgress(defaultProgress());
+}
+
 export async function startPlan() {
   const progress = await readProgress();
   if (progress.startedAt) return progress;

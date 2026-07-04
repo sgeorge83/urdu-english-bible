@@ -8,7 +8,7 @@ import {
   removeHighlight,
 } from "./highlights.js";
 import { paginateVerses } from "./pagination.js";
-import { getStats, isDayComplete, markDayComplete, startPlan } from "./plan-progress.js";
+import { getStats, isDayComplete, markDayComplete, resetPlan, startPlan } from "./plan-progress.js";
 import { countWordsInVerses, readingStats } from "./progress.js";
 import { getPlanDay, getPlanMeta, getSectionByKey, loadPlan } from "./reading-plan.js";
 import { ENGLISH_BOOK_NAMES } from "./config.js";
@@ -494,7 +494,8 @@ async function renderPlanDashboard() {
         <div class="plan-actions">
           ${
             stats.started
-              ? `<button type="button" class="plan-btn plan-btn--primary" id="btn-plan-continue">Continue Day ${stats.currentDay}</button>`
+              ? `<button type="button" class="plan-btn plan-btn--primary" id="btn-plan-continue">Continue Day ${stats.currentDay}</button>
+                 <button type="button" class="plan-btn plan-btn--danger" id="btn-plan-reset">Restart from beginning</button>`
               : `<button type="button" class="plan-btn plan-btn--primary" id="btn-plan-start">Start plan</button>`
           }
         </div>
@@ -511,6 +512,14 @@ async function renderPlanDashboard() {
     });
     document.getElementById("btn-plan-continue")?.addEventListener("click", () => {
       navigate({ name: "planDay", dayIndex: stats.currentDay });
+    });
+    document.getElementById("btn-plan-reset")?.addEventListener("click", async () => {
+      const confirmed = window.confirm(
+        "Restart the reading plan from Day 1?\n\nThis clears all completed days and your streak. This cannot be undone."
+      );
+      if (!confirmed) return;
+      await resetPlan();
+      await renderPlanDashboard();
     });
   } catch (err) {
     setError(err.message || "Failed to load reading plan");
