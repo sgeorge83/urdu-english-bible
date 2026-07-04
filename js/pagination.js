@@ -5,10 +5,13 @@ export function buildVerseElement(verse, settings, highlightColor) {
   const el = document.createElement("article");
   el.className = "verse-pair";
   el.dataset.verse = String(verse.verse);
+  if (verse.chapter != null) {
+    el.dataset.chapter = String(verse.chapter);
+  }
 
   const num = document.createElement("div");
   num.className = "verse-num";
-  num.textContent = verse.verse;
+  num.textContent = verse.showChapter ? `${verse.chapter}:${verse.verse}` : String(verse.verse);
   el.appendChild(num);
 
   if (verse.urdu) {
@@ -59,7 +62,8 @@ export function paginateVerses(verses, measureEl, pageHeight, settings, highligh
   const usableHeight = Math.max(pageHeight - 4, 120);
 
   for (const verse of verses) {
-    const color = highlightMap?.get(verse.verse);
+    const highlightKey = verse.showChapter ? `${verse.chapter}:${verse.verse}` : verse.verse;
+    const color = highlightMap?.get(highlightKey);
     const block = buildVerseElement(verse, settings, color);
     inner.appendChild(block);
 

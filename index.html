@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/app.css">
   <link rel="stylesheet" href="css/reader.css">
+  <link rel="stylesheet" href="css/plan.css">
 </head>
 <body>
   <div id="global-loader" class="global-loader" hidden>Loading…</div>
@@ -34,6 +35,7 @@
           <button type="button" class="theme-icon-btn" data-theme-quick="sepia" aria-label="Sepia theme" title="Sepia">◐</button>
           <button type="button" class="theme-icon-btn" data-theme-quick="night" aria-label="Night theme" title="Night">☾</button>
         </div>
+        <button type="button" id="btn-plan" class="icon-btn">Plan</button>
         <button type="button" id="btn-notebook" class="icon-btn">Notebook</button>
       </div>
     </header>
@@ -55,6 +57,30 @@
       <button type="button" class="aa-btn btn-open-settings" aria-label="Reading settings">Aa</button>
     </header>
     <main id="chapter-grid" class="chapter-grid"></main>
+  </div>
+
+  <!-- Daily Reading Plan -->
+  <div class="screen" data-screen="plan" hidden>
+    <header class="top-bar">
+      <button type="button" id="btn-back-plan-home" class="back-btn">← Home</button>
+      <div class="top-bar__center">
+        <h2 class="chapter-title">Daily Reading Plan</h2>
+        <p class="chapter-subtitle">Book of Common Prayer · 814 days</p>
+      </div>
+      <button type="button" class="aa-btn btn-open-settings" aria-label="Display theme">Aa</button>
+    </header>
+    <main id="plan-dashboard" class="plan-dashboard"></main>
+  </div>
+
+  <div class="screen" data-screen="plan-day" hidden>
+    <header class="top-bar">
+      <button type="button" id="btn-back-plan" class="back-btn">← Plan</button>
+      <div class="top-bar__center">
+        <h2 id="plan-day-title" class="chapter-title"></h2>
+        <p id="plan-day-subtitle" class="chapter-subtitle"></p>
+      </div>
+    </header>
+    <main id="plan-day-content" class="plan-day-content"></main>
   </div>
 
   <!-- Reader -->

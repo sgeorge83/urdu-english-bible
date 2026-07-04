@@ -1,6 +1,6 @@
 import { ABOUT_CONTENT } from "./about.js";
 import { loadBooks, getBook, getAdjacentChapter } from "./books.js";
-import { fetchMergedChapter } from "./bible-data.js";
+import { fetchMergedChapter, fetchMergedPassage } from "./bible-data.js";
 import {
   addHighlight,
   getHighlightForVerse,
@@ -8,7 +8,9 @@ import {
   removeHighlight,
 } from "./highlights.js";
 import { paginateVerses } from "./pagination.js";
+import { getStats, isDayComplete, markDayComplete, startPlan } from "./plan-progress.js";
 import { countWordsInVerses, readingStats } from "./progress.js";
+import { getPlanDay, getPlanMeta, getSectionByKey, loadPlan } from "./reading-plan.js";
 import { ENGLISH_BOOK_NAMES } from "./config.js";
 import { loadSettings, saveSettings, marginPadding } from "./settings.js";
 
@@ -48,13 +50,38 @@ const els = {
   aboutContent: document.getElementById("about-content"),
   aaSheetTitle: document.getElementById("aa-sheet-title"),
   aaReaderOnly: document.getElementById("aa-reader-only"),
+  planDashboard: document.getElementById("plan-dashboard"),
+  planDayTitle: document.getElementById("plan-day-title"),
+  planDaySubtitle: document.getElementById("plan-day-subtitle"),
+  planDayContent: document.getElementById("plan-day-content"),
   loader: document.getElementById("global-loader"),
   error: document.getElementById("global-error"),
 };
 
+function isReaderRoute(route = state.route) {
+  return route.name === "read" || route.name === "planPassage";
+}
+
+function isNormalReaderRoute(route = state.route) {
+  return route.name === "read";
+}
+
 function parseRoute() {
   const hash = location.hash.replace(/^#/, "") || "/";
   const parts = hash.split("/").filter(Boolean);
+  if (parts[0] === "plan") {
+    if (parts[1] === "day" && parts[2] && parts[3]) {
+      return {
+        name: "planPassage",
+        dayIndex: Number(parts[2]),
+        sectionKey: parts[3],
+      };
+    }
+    if (parts[1] === "day" && parts[2]) {
+      return { name: "planDay", dayIndex: Number(parts[2]) };
+    }
+    return { name: "plan" };
+  }
   if (parts[0] === "read" && parts[1] && parts[2]) {
     return { name: "read", bookId: Number(parts[1]), chapter: Number(parts[2]) };
   }
@@ -67,17 +94,32 @@ function parseRoute() {
   return { name: "library" };
 }
 
+function routeToPath(route) {
+  if (route.name === "planPassage") {
+    return `#/plan/day/${route.dayIndex}/${route.sectionKey}`;
+  }
+  if (route.name === "planDay") {
+    return `#/plan/day/${route.dayIndex}`;
+  }
+  if (route.name === "plan") {
+    return "#/plan";
+  }
+  if (route.name === "read") {
+    return `#/read/${route.bookId}/${route.chapter}`;
+  }
+  if (route.name === "book") {
+    return `#/book/${route.bookId}`;
+  }
+  if (route.name === "notebook") {
+    return "#/notebook";
+  }
+  return "#/";
+}
+
 function navigate(route) {
   if (els.aboutSheet) els.aboutSheet.hidden = true;
   if (els.aaSheet) els.aaSheet.hidden = true;
-  const path =
-    route.name === "read"
-      ? `#/read/${route.bookId}/${route.chapter}`
-      : route.name === "book"
-        ? `#/book/${route.bookId}`
-        : route.name === "notebook"
-          ? "#/notebook"
-          : "#/";
+  const path = routeToPath(route);
   if (location.hash !== path) location.hash = path;
   state.route = route;
   render();
@@ -146,6 +188,9 @@ async function init() {
 }
 
 function bindChrome() {
+  document.getElementById("btn-plan").addEventListener("click", () => navigate({ name: "plan" }));
+  document.getElementById("btn-back-plan-home").addEventListener("click", () => navigate({ name: "library" }));
+  document.getElementById("btn-back-plan").addEventListener("click", () => navigate({ name: "plan" }));
   document.getElementById("btn-notebook").addEventListener("click", () => navigate({ name: "notebook" }));
   document.getElementById("btn-back-home").addEventListener("click", () => navigate({ name: "library" }));
   document.getElementById("btn-about").addEventListener("click", () => {
@@ -157,6 +202,10 @@ function bindChrome() {
   });
   document.getElementById("btn-back-library").addEventListener("click", () => navigate({ name: "library" }));
   document.getElementById("btn-back-chapters").addEventListener("click", () => {
+    if (state.route.name === "planPassage") {
+      navigate({ name: "planDay", dayIndex: state.route.dayIndex });
+      return;
+    }
     if (state.route.name === "read") {
       navigate({ name: "book", bookId: state.route.bookId });
     }
@@ -176,8 +225,9 @@ function bindChrome() {
 
   els.pageTrack.addEventListener("click", (e) => {
     const pair = e.target.closest(".verse-pair");
-    if (!pair || state.route.name !== "read") return;
-    handleVerseTap(Number(pair.dataset.verse));
+    if (!pair || !isReaderRoute()) return;
+    const chapter = pair.dataset.chapter ? Number(pair.dataset.chapter) : undefined;
+    handleVerseTap(Number(pair.dataset.verse), chapter);
   });
 
   setupSwipe(els.pageTrack);
@@ -190,7 +240,7 @@ function toggleSettingsSheet() {
 }
 
 function updateSettingsSheetMode() {
-  const isReader = state.route.name === "read";
+  const isReader = isReaderRoute();
   if (els.aaReaderOnly) els.aaReaderOnly.hidden = !isReader;
   if (els.aaSheetTitle) {
     els.aaSheetTitle.textContent = isReader ? "Reading settings" : "Display theme";
@@ -248,7 +298,7 @@ function setTheme(theme) {
 function persistSettingsAndRepaginate() {
   saveSettings(state.settings);
   applyTheme();
-  if (state.route.name === "read" && state.chapter) {
+  if (isReaderRoute() && state.chapter) {
     repaginate();
   }
 }
@@ -273,6 +323,24 @@ async function render() {
   if (state.route.name === "notebook") {
     showScreen("notebook");
     await renderNotebook();
+    return;
+  }
+
+  if (state.route.name === "plan") {
+    showScreen("plan");
+    await renderPlanDashboard();
+    return;
+  }
+
+  if (state.route.name === "planDay") {
+    showScreen("plan-day");
+    await renderPlanDay(state.route.dayIndex);
+    return;
+  }
+
+  if (state.route.name === "planPassage") {
+    showScreen("reader");
+    await renderPlanPassage(state.route.dayIndex, state.route.sectionKey);
     return;
   }
 
@@ -380,6 +448,197 @@ async function loadChapterHighlights(bookId, chapter) {
   state.highlights = map;
 }
 
+async function loadPassageHighlights(verses) {
+  const all = await listHighlights();
+  const map = new Map();
+  for (const verse of verses) {
+    for (const h of all) {
+      if (h.bookId === verse.bookId && h.chapter === verse.chapter && h.verse === verse.verse) {
+        const key = verse.showChapter ? `${verse.chapter}:${verse.verse}` : verse.verse;
+        map.set(key, h.color);
+      }
+    }
+  }
+  state.highlights = map;
+}
+
+async function renderPlanDashboard() {
+  if (!els.planDashboard) return;
+
+  try {
+    setLoading(true);
+    await loadPlan();
+    const meta = getPlanMeta();
+    const stats = await getStats(meta.totalDays);
+
+    els.planDashboard.innerHTML = `
+      <div class="plan-stats">
+        <div class="plan-stat">
+          <span class="plan-stat__value">${stats.streak}</span>
+          <span class="plan-stat__label">Day streak</span>
+        </div>
+        <div class="plan-stat">
+          <span class="plan-stat__value">${stats.completed}</span>
+          <span class="plan-stat__label">Days done</span>
+        </div>
+      </div>
+      <article class="plan-card">
+        <h3>${escapeHtml(meta.name)}</h3>
+        <p>${escapeHtml(meta.subtitle)}</p>
+        <div class="plan-progress">
+          <div class="plan-progress__bar">
+            <div class="plan-progress__fill" style="width:${stats.percent}%"></div>
+          </div>
+          <p class="plan-progress__text">${stats.completed} of ${stats.total} days complete (${stats.percent}%)</p>
+        </div>
+        <div class="plan-actions">
+          ${
+            stats.started
+              ? `<button type="button" class="plan-btn plan-btn--primary" id="btn-plan-continue">Continue Day ${stats.currentDay}</button>`
+              : `<button type="button" class="plan-btn plan-btn--primary" id="btn-plan-start">Start plan</button>`
+          }
+        </div>
+      </article>
+      <article class="plan-card">
+        <h3>How it works</h3>
+        <p>Each day has five readings from the Book of Common Prayer lectionary. Tap a passage to read it in Urdu and English from your Bible text. Mark the day complete when finished.</p>
+      </article>
+    `;
+
+    document.getElementById("btn-plan-start")?.addEventListener("click", async () => {
+      await startPlan();
+      navigate({ name: "planDay", dayIndex: 1 });
+    });
+    document.getElementById("btn-plan-continue")?.addEventListener("click", () => {
+      navigate({ name: "planDay", dayIndex: stats.currentDay });
+    });
+  } catch (err) {
+    setError(err.message || "Failed to load reading plan");
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function renderPlanDay(dayIndex) {
+  if (!els.planDayContent) return;
+
+  try {
+    setLoading(true);
+    const day = await getPlanDay(dayIndex);
+    const meta = getPlanMeta();
+    const complete = await isDayComplete(dayIndex);
+
+    els.planDayTitle.textContent = `Day ${dayIndex}`;
+    els.planDaySubtitle.textContent = `${dayIndex} of ${meta.totalDays}`;
+
+    const list = document.createElement("div");
+    list.className = "plan-passage-list";
+
+    for (const section of day.sections) {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "plan-passage-card";
+      card.innerHTML = `
+        <span class="plan-passage-card__title">${escapeHtml(section.title)}</span>
+        <span class="plan-passage-card__ref">${escapeHtml(section.displayText)}</span>
+      `;
+      card.addEventListener("click", () => {
+        navigate({ name: "planPassage", dayIndex, sectionKey: section.key });
+      });
+      list.appendChild(card);
+    }
+
+    els.planDayContent.innerHTML = "";
+    els.planDayContent.appendChild(list);
+
+    const completeBtn = document.createElement("button");
+    completeBtn.type = "button";
+    completeBtn.className = "plan-btn plan-btn--primary plan-complete-btn";
+    completeBtn.textContent = complete ? "Day completed" : "Mark day complete";
+    completeBtn.disabled = complete;
+    completeBtn.addEventListener("click", async () => {
+      await markDayComplete(dayIndex);
+      await renderPlanDay(dayIndex);
+    });
+    els.planDayContent.appendChild(completeBtn);
+
+    const nav = document.createElement("div");
+    nav.className = "plan-day-nav";
+    if (dayIndex > 1) {
+      const prev = document.createElement("button");
+      prev.type = "button";
+      prev.className = "plan-btn";
+      prev.textContent = `← Day ${dayIndex - 1}`;
+      prev.addEventListener("click", () => navigate({ name: "planDay", dayIndex: dayIndex - 1 }));
+      nav.appendChild(prev);
+    } else {
+      nav.appendChild(document.createElement("span"));
+    }
+    if (dayIndex < meta.totalDays) {
+      const next = document.createElement("button");
+      next.type = "button";
+      next.className = "plan-btn";
+      next.textContent = `Day ${dayIndex + 1} →`;
+      next.addEventListener("click", () => navigate({ name: "planDay", dayIndex: dayIndex + 1 }));
+      nav.appendChild(next);
+    }
+    els.planDayContent.appendChild(nav);
+  } catch (err) {
+    setError(err.message || "Failed to load plan day");
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function renderPlanPassage(dayIndex, sectionKey) {
+  const section = getSectionByKey(sectionKey);
+  if (!section) {
+    setError("Reading section not found");
+    navigate({ name: "planDay", dayIndex });
+    return;
+  }
+
+  try {
+    setLoading(true);
+    els.readerShell?.classList.add("reader-shell--changing");
+    const day = await getPlanDay(dayIndex);
+    const daySection = day.sections.find((item) => item.key === sectionKey);
+    if (!daySection?.passageSpecs?.length) {
+      throw new Error("No passage references for this reading");
+    }
+
+    state.chapter = await fetchMergedPassage(daySection.passageSpecs, {
+      referenceLabel: daySection.displayText,
+      planContext: {
+        dayIndex,
+        sectionKey,
+        sectionTitle: section.title,
+      },
+    });
+
+    await loadPassageHighlights(state.chapter.verses);
+    state.totalWords = countWordsInVerses(state.chapter.verses);
+
+    els.readerHeaderEn.textContent = `${section.title} · ${state.chapter.referenceLabel}`;
+    els.readerHeaderUr.textContent = `Daily Reading Plan · Day ${dayIndex}`;
+
+    state.pageIndex = 0;
+    state.startPage = "first";
+    repaginate();
+    renderPages();
+    updateFooter();
+    updateNavButtons();
+  } catch (err) {
+    setError(err.message || "Failed to load passage");
+    navigate({ name: "planDay", dayIndex });
+  } finally {
+    setLoading(false);
+    requestAnimationFrame(() => {
+      els.readerShell?.classList.remove("reader-shell--changing");
+    });
+  }
+}
+
 async function renderReader(bookId, chapter) {
   const book = getBook(state.books, bookId);
   if (!book) {
@@ -462,7 +721,7 @@ function renderPages() {
 }
 
 function goAdjacentChapter(direction) {
-  if (state.route.name !== "read") return;
+  if (!isNormalReaderRoute()) return;
   const adj = getAdjacentChapter(
     state.books,
     state.route.bookId,
@@ -478,14 +737,19 @@ function goAdjacentChapter(direction) {
 function updateNavButtons() {
   const prevBtn = document.getElementById("btn-prev-page");
   const nextBtn = document.getElementById("btn-next-page");
-  if (!prevBtn || !nextBtn || state.route.name !== "read") return;
+  if (!prevBtn || !nextBtn || !isReaderRoute()) return;
 
-  const hasPrev =
-    state.pageIndex > 0 ||
-    getAdjacentChapter(state.books, state.route.bookId, state.route.chapter, "prev");
-  const hasNext =
-    state.pageIndex < state.pages.length - 1 ||
-    getAdjacentChapter(state.books, state.route.bookId, state.route.chapter, "next");
+  let hasPrev = state.pageIndex > 0;
+  let hasNext = state.pageIndex < state.pages.length - 1;
+
+  if (isNormalReaderRoute()) {
+    hasPrev =
+      hasPrev ||
+      getAdjacentChapter(state.books, state.route.bookId, state.route.chapter, "prev");
+    hasNext =
+      hasNext ||
+      getAdjacentChapter(state.books, state.route.bookId, state.route.chapter, "next");
+  }
 
   prevBtn.disabled = !hasPrev;
   nextBtn.disabled = !hasNext;
@@ -495,11 +759,11 @@ function updateNavButtons() {
 
 function goPage(index) {
   if (index >= state.pages.length) {
-    goAdjacentChapter("next");
+    if (isNormalReaderRoute()) goAdjacentChapter("next");
     return;
   }
   if (index < 0) {
-    goAdjacentChapter("prev");
+    if (isNormalReaderRoute()) goAdjacentChapter("prev");
     return;
   }
   state.pageIndex = index;
@@ -517,6 +781,14 @@ function updateFooter() {
     state.pageIndex + 1,
     state.pages.length
   );
+
+  if (state.route.name === "planPassage" && state.chapter?.planContext) {
+    const ctx = state.chapter.planContext;
+    els.readerFooter.textContent =
+      `Daily Reading Plan · Day ${ctx.dayIndex} · ${ctx.sectionTitle} · Page ${state.pageIndex + 1} of ${state.pages.length} · ${minutesLeft} min left · ${percent}% read`;
+    return;
+  }
+
   const book = getBook(state.books, state.route.bookId);
   const en = book ? `${book.nameEnglish} ${state.route.chapter}` : "";
   const ur = book ? `${book.nameUrdu} ${state.route.chapter}` : "";
@@ -550,20 +822,28 @@ function setupLongPress(el) {
     const pair = e.target.closest(".verse-pair");
     if (!pair) return;
     const verse = Number(pair.dataset.verse);
-    timer = setTimeout(() => openHighlightMenu(verse), 550);
+    const chapter = pair.dataset.chapter ? Number(pair.dataset.chapter) : undefined;
+    timer = setTimeout(() => openHighlightMenu(verse, chapter), 550);
   });
   el.addEventListener("touchend", () => clearTimeout(timer));
   el.addEventListener("touchmove", () => clearTimeout(timer));
 }
 
-function handleVerseTap(verse) {
-  if (state.route.name !== "read") return;
-  openHighlightMenu(verse);
+function handleVerseTap(verse, chapterOverride) {
+  if (!isReaderRoute()) return;
+  openHighlightMenu(verse, chapterOverride);
 }
 
-async function openHighlightMenu(verse) {
-  const existing = await getHighlightForVerse(state.route.bookId, state.route.chapter, verse);
-  const verseData = state.chapter.verses.find((v) => v.verse === verse);
+async function openHighlightMenu(verse, chapterOverride) {
+  const chapterNumber = chapterOverride ?? state.route.chapter;
+  const bookId = state.chapter?.isPassage
+    ? state.chapter.verses.find((v) => v.verse === verse && (!chapterOverride || v.chapter === chapterOverride))?.bookId ?? state.chapter.bookId
+    : state.route.bookId;
+
+  const existing = await getHighlightForVerse(bookId, chapterNumber, verse);
+  const verseData = state.chapter.verses.find(
+    (v) => v.verse === verse && (chapterOverride ? v.chapter === chapterOverride : true)
+  );
   if (!verseData) return;
 
   const choice = window.prompt(
@@ -575,7 +855,8 @@ async function openHighlightMenu(verse) {
   const trimmed = choice.trim().toLowerCase();
   if (trimmed === "remove" && existing) {
     await removeHighlight(existing.id);
-    state.highlights.delete(verse);
+    const highlightKey = state.chapter?.multiChapter ? `${chapterNumber}:${verse}` : verse;
+    state.highlights.delete(highlightKey);
     repaginate();
     return;
   }
@@ -589,18 +870,19 @@ async function openHighlightMenu(verse) {
   if (existing) await removeHighlight(existing.id);
 
   await addHighlight({
-    bookId: state.route.bookId,
-    chapter: state.route.chapter,
+    bookId,
+    chapter: chapterNumber,
     verse,
     color: colorDef.value,
     colorName: colorDef.id,
     note: match[2]?.trim() || "",
     previewUrdu: verseData.urdu || "",
     previewEnglish: verseData.english || "",
-    reference: `${ENGLISH_BOOK_NAMES[state.route.bookId]} ${state.route.chapter}:${verse}`,
+    reference: `${ENGLISH_BOOK_NAMES[bookId]} ${chapterNumber}:${verse}`,
   });
 
-  state.highlights.set(verse, colorDef.value);
+  const highlightKey = state.chapter?.multiChapter ? `${chapterNumber}:${verse}` : verse;
+  state.highlights.set(highlightKey, colorDef.value);
   repaginate();
 }
 
@@ -642,7 +924,7 @@ function escapeHtml(text) {
 }
 
 window.addEventListener("resize", () => {
-  if (state.route.name === "read" && state.chapter) {
+  if (isReaderRoute() && state.chapter) {
     repaginate();
   }
 });

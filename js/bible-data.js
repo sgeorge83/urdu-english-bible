@@ -69,3 +69,64 @@ export function countWords(chapter) {
   }
   return words;
 }
+
+/**
+ * Fetch and merge only the verses covered by a reading-plan passage spec list.
+ */
+export async function fetchMergedPassage(passageSpecs, meta = {}) {
+  if (!passageSpecs?.length) {
+    throw new Error("No passage references provided");
+  }
+
+  const chapterCache = new Map();
+  const verses = [];
+
+  for (const spec of passageSpecs) {
+    const cacheKey = `${spec.bookId}:${spec.chapter}`;
+    if (!chapterCache.has(cacheKey)) {
+      chapterCache.set(cacheKey, await fetchMergedChapter(spec.bookId, spec.chapter));
+    }
+
+    const chapter = chapterCache.get(cacheKey);
+    const maxVerse = chapter.verses.reduce((max, verse) => Math.max(max, verse.verse), 0);
+    const verseStart = spec.verseStart ?? 1;
+    const verseEnd = spec.verseEnd ?? maxVerse;
+
+    for (const verse of chapter.verses) {
+      if (verse.verse < verseStart || verse.verse > verseEnd) continue;
+      if (!verse.urdu && !verse.english) continue;
+      verses.push({
+        verse: verse.verse,
+        urdu: verse.urdu,
+        english: verse.english,
+        chapter: spec.chapter,
+        bookId: spec.bookId,
+      });
+    }
+  }
+
+  if (!verses.length) {
+    throw new Error("Passage has no readable verses");
+  }
+
+  const firstSpec = passageSpecs[0];
+  const firstChapter = chapterCache.get(`${firstSpec.bookId}:${firstSpec.chapter}`);
+  const chaptersUsed = new Set(verses.map((verse) => verse.chapter));
+  const multiChapter = chaptersUsed.size > 1;
+
+  for (const verse of verses) {
+    verse.showChapter = multiChapter;
+  }
+
+  return {
+    bookId: firstSpec.bookId,
+    bookNameEnglish: firstSpec.bookName,
+    bookNameUrdu: firstChapter?.bookNameUrdu ?? firstSpec.bookName,
+    chapter: firstSpec.chapter,
+    referenceLabel: meta.referenceLabel ?? passageSpecs.map((spec) => spec.label).join("; "),
+    verses,
+    isPassage: true,
+    multiChapter,
+    planContext: meta.planContext ?? null,
+  };
+}

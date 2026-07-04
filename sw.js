@@ -1,4 +1,4 @@
-const CACHE_NAME = "urdu-english-bible-v7";
+const CACHE_NAME = "urdu-english-bible-v8";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,6 +6,8 @@ const APP_SHELL = [
   "./css/tokens.css",
   "./css/app.css",
   "./css/reader.css",
+  "./css/plan.css",
+  "./data/book-of-common-prayer-plan.json",
   "./js/config.js",
   "./js/books.js",
   "./js/bible-data.js",
@@ -14,6 +16,9 @@ const APP_SHELL = [
   "./js/highlights.js",
   "./js/pagination.js",
   "./js/about.js",
+  "./js/reference-parser.js",
+  "./js/reading-plan.js",
+  "./js/plan-progress.js",
   "./js/app.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
