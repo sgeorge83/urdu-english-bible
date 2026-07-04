@@ -50,11 +50,11 @@ npx serve .
 
 GitHub Pages deploys automatically on push to `main` via `.github/workflows/pages.yml`.
 
-The workflow uses `enablement: true` so the first run can create the Pages site. If deploy still fails, enable once manually:
+The workflow uses `enablement: true` so the first run can create the Pages site. If deploy fails with **"Deployment failed, try again later"**:
 
-1. Repo **Settings → Pages**
-2. **Build and deployment → Source:** GitHub Actions
-3. Re-run the failed workflow (Actions tab → Deploy GitHub Pages → Re-run)
+1. Repo **Settings → Environments → github-pages** — remove required reviewers (if any)
+2. Repo **Settings → Pages** — confirm **Source: GitHub Actions**
+3. **Actions** → **Deploy GitHub Pages** → **Re-run all jobs** (first deploy can take a few minutes)
 
 Live URL: **https://sgeorge83.github.io/urdu-english-bible/**
 
