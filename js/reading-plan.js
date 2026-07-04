@@ -1,6 +1,8 @@
 import { parseReferenceString } from "./reference-parser.js";
 
 const PLAN_URL = "./data/book-of-common-prayer-plan.json";
+const PLAN_FALLBACK_URL =
+  "https://raw.githubusercontent.com/sgeorge83/urdu-english-bible/main/data/book-of-common-prayer-plan.json";
 
 export const PLAN_SECTIONS = [
   { key: "first-psalm", jsonKey: "First Psalm", title: "First Psalm" },
@@ -24,15 +26,26 @@ export function getPlanMeta() {
   };
 }
 
+async function fetchPlanFrom(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Plan fetch failed (${response.status})`);
+  }
+  const plan = await response.json();
+  if (!Array.isArray(plan) || !plan.length) {
+    throw new Error("Plan data is empty");
+  }
+  return plan;
+}
+
 export async function loadPlan() {
   if (cachedPlan) return cachedPlan;
 
-  const response = await fetch(PLAN_URL);
-  if (!response.ok) {
-    throw new Error("Failed to load daily reading plan");
+  try {
+    cachedPlan = await fetchPlanFrom(PLAN_URL);
+  } catch {
+    cachedPlan = await fetchPlanFrom(PLAN_FALLBACK_URL);
   }
-
-  cachedPlan = await response.json();
   return cachedPlan;
 }
 
