@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#f4ecd8">
+  <meta name="description" content="Bilingual Bible reader — Urdu Geo and World English Bible, verse by verse">
+  <title>Urdu English Bible</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/reader.css">
+</head>
+<body>
+  <div id="global-loader" class="global-loader" hidden>Loading…</div>
+  <p id="global-error" class="global-error" role="alert" hidden></p>
+
+  <!-- Library -->
+  <div class="screen" data-screen="library">
+    <header class="top-bar">
+      <div>
+        <h1 class="app-title">Urdu English Bible</h1>
+        <p class="app-subtitle">Urdu Geo · World English Bible</p>
+      </div>
+      <button type="button" id="btn-notebook" class="icon-btn">Notebook</button>
+    </header>
+    <main id="library-list" class="library-list"></main>
+    <footer class="site-footer">
+      <p>E-GEEK CREATIONS</p>
+      <p class="legal">Urdu Geo (CC BY-NC-ND 4.0) · WEB (Public Domain)</p>
+    </footer>
+  </div>
+
+  <!-- Chapters -->
+  <div class="screen" data-screen="chapters" hidden>
+    <header class="top-bar">
+      <button type="button" id="btn-back-library" class="back-btn">← Books</button>
+      <div class="top-bar__center">
+        <h2 id="chapter-title" class="chapter-title"></h2>
+        <p id="chapter-subtitle" class="chapter-subtitle"></p>
+      </div>
+    </header>
+    <main id="chapter-grid" class="chapter-grid"></main>
+  </div>
+
+  <!-- Reader -->
+  <div class="screen screen--reader" data-screen="reader" hidden>
+    <header class="reader-bar">
+      <button type="button" id="btn-back-chapters" class="back-btn">←</button>
+      <div class="reader-bar__titles">
+        <div id="reader-header-en" class="reader-bar__en"></div>
+        <div id="reader-header-ur" class="reader-bar__ur" dir="rtl" lang="ur"></div>
+      </div>
+      <button type="button" id="btn-aa" class="aa-btn" aria-label="Reading settings">Aa</button>
+    </header>
+
+    <div id="reader-shell" class="reader-shell">
+      <div id="measure-host" class="measure-host" aria-hidden="true">
+        <div id="measure" class="measure-column"></div>
+      </div>
+      <div class="reader-viewport">
+        <div id="page-track" class="page-track"></div>
+      </div>
+      <button type="button" id="btn-prev-page" class="page-nav page-nav--prev" aria-label="Previous page">‹</button>
+      <button type="button" id="btn-next-page" class="page-nav page-nav--next" aria-label="Next page">›</button>
+    </div>
+
+    <footer id="reader-footer" class="reader-footer"></footer>
+
+    <div id="aa-sheet" class="aa-sheet" hidden>
+      <div class="aa-sheet__header">
+        <h2>Reading settings</h2>
+        <button type="button" id="btn-close-aa" class="icon-btn">Close</button>
+      </div>
+      <label class="aa-row">
+        <span>Font size</span>
+        <span id="font-size-label">17px</span>
+      </label>
+      <input type="range" id="font-size" min="14" max="26" step="1" value="17">
+      <p class="aa-label">Theme</p>
+      <div class="aa-btn-row">
+        <button type="button" data-theme-btn="day" class="chip">Day</button>
+        <button type="button" data-theme-btn="sepia" class="chip active">Sepia</button>
+        <button type="button" data-theme-btn="night" class="chip">Night</button>
+      </div>
+      <p class="aa-label">Margins</p>
+      <div class="aa-btn-row">
+        <button type="button" data-margin-btn="tight" class="chip">Tight</button>
+        <button type="button" data-margin-btn="medium" class="chip active">Medium</button>
+        <button type="button" data-margin-btn="wide" class="chip">Wide</button>
+      </div>
+      <label class="aa-row aa-row--toggle">
+        <span>Justified text</span>
+        <input type="checkbox" id="justify-toggle" checked>
+      </label>
+    </div>
+  </div>
+
+  <!-- Notebook -->
+  <div class="screen" data-screen="notebook" hidden>
+    <header class="top-bar">
+      <button type="button" class="back-btn" onclick="location.hash='#/'">← Reader</button>
+      <h2 class="chapter-title">My Notebook</h2>
+    </header>
+    <main id="notebook-list" class="notebook-list"></main>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
