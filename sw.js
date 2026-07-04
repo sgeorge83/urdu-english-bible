@@ -1,4 +1,4 @@
-const CACHE_NAME = "urdu-english-bible-v14";
+const CACHE_NAME = "urdu-english-bible-v15";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -60,17 +60,21 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.method !== "GET") return;
 
+  // Stale-while-revalidate for the app shell: serve cached copy instantly,
+  // refresh it from the network in the background so the next load is current.
   event.respondWith(
-    caches.match(event.request).then(
-      (cached) =>
-        cached ||
-        fetch(event.request).then((response) => {
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const cached = await cache.match(event.request);
+      const networkFetch = fetch(event.request)
+        .then((response) => {
           if (response.ok && url.origin === self.location.origin) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            cache.put(event.request, response.clone());
           }
           return response;
         })
-    )
+        .catch(() => cached);
+
+      return cached || networkFetch;
+    })
   );
 });
