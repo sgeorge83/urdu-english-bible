@@ -344,6 +344,45 @@ html[data-theme="night"] .notebook-card {
   font-size: 0.95rem;
 }
 
+.notebook-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.notebook-delete {
+  flex-shrink: 0;
+  font: inherit;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--bar-border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+.notebook-delete:hover {
+  color: #a03030;
+  border-color: rgba(160, 48, 48, 0.4);
+}
+
+html[data-theme="night"] .notebook-delete:hover {
+  color: #e08585;
+  border-color: rgba(224, 133, 133, 0.4);
+}
+
+.notebook-clear-btn {
+  align-self: center;
+  margin-top: 8px;
+}
+
 .notebook-urdu {
   margin: 0 0 6px;
   font-family: var(--font-urdu);

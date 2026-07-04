@@ -3,6 +3,7 @@ import { loadBooks, getBook, getAdjacentChapter } from "./books.js";
 import { fetchMergedChapter, fetchMergedPassage } from "./bible-data.js";
 import {
   addHighlight,
+  clearHighlights,
   getHighlightForVerse,
   listHighlights,
   removeHighlight,
@@ -912,7 +913,10 @@ async function renderNotebook() {
     card.className = "notebook-card";
     card.style.borderLeftColor = item.color;
     card.innerHTML = `
-      <h3>${escapeHtml(item.reference)}</h3>
+      <div class="notebook-card__header">
+        <h3>${escapeHtml(item.reference)}</h3>
+        <button type="button" class="notebook-delete" aria-label="Delete this highlight" title="Delete">✕</button>
+      </div>
       ${item.previewUrdu ? `<p class="notebook-urdu" dir="rtl" lang="ur">${escapeHtml(item.previewUrdu)}</p>` : ""}
       ${item.previewEnglish ? `<p class="notebook-en">${escapeHtml(item.previewEnglish)}</p>` : ""}
       ${item.note ? `<p class="notebook-note">${escapeHtml(item.note)}</p>` : ""}
@@ -920,8 +924,29 @@ async function renderNotebook() {
     card.addEventListener("click", () => {
       navigate({ name: "read", bookId: item.bookId, chapter: item.chapter });
     });
+    card.querySelector(".notebook-delete").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const confirmed = window.confirm(`Delete highlight for ${item.reference}?`);
+      if (!confirmed) return;
+      await removeHighlight(item.id);
+      await renderNotebook();
+    });
     els.notebookList.appendChild(card);
   }
+
+  const clearBtn = document.createElement("button");
+  clearBtn.type = "button";
+  clearBtn.className = "plan-btn plan-btn--danger notebook-clear-btn";
+  clearBtn.textContent = "Clear all highlights";
+  clearBtn.addEventListener("click", async () => {
+    const confirmed = window.confirm(
+      `Delete all ${items.length} highlights?\n\nThis cannot be undone.`
+    );
+    if (!confirmed) return;
+    await clearHighlights();
+    await renderNotebook();
+  });
+  els.notebookList.appendChild(clearBtn);
 }
 
 function escapeHtml(text) {

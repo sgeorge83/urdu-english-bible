@@ -55,6 +55,16 @@ export async function removeHighlight(id) {
   });
 }
 
+export async function clearHighlights() {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 export async function getHighlightForVerse(bookId, chapter, verse) {
   const all = await listHighlights();
   return all.find(
