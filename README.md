@@ -2,7 +2,7 @@
 
 Kindle-style bilingual Bible PWA — **Urdu Geo Version** and **World English Bible (WEB)**, verse by verse.
 
-**Live site:** [https://sgeorge83.github.io/urdu-english-bible/](https://sgeorge83.github.io/urdu-english-bible/)
+**Live site:** [https://urduenglishbible.wordonair.com/](https://urduenglishbible.wordonair.com/)
 
 ## Data sources
 
@@ -56,8 +56,8 @@ The workflow uses `enablement: true` so the first run can create the Pages site.
 2. Repo **Settings → Pages** — confirm **Source: GitHub Actions**
 3. **Actions** → **Deploy GitHub Pages** → **Re-run all jobs** (first deploy can take a few minutes)
 
-Live URL: **https://sgeorge83.github.io/urdu-english-bible/**
+Live URL: **https://urduenglishbible.wordonair.com/** (custom domain on GitHub Pages; the old github.io address redirects here)
 
 ## Attribution
 
-E-GEEK CREATIONS · Urdu Geo Version · World English Bible
+Project of WordOnAir Labs · Urdu Geo Version · World English Bible

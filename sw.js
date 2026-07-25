@@ -1,4 +1,4 @@
-const CACHE_NAME = "urdu-english-bible-v16";
+const CACHE_NAME = "urdu-english-bible-v17";
 // Bible text and fonts live in a separate cache that survives app updates,
 // so downloaded chapters are never wiped by an app-shell version bump.
 const DATA_CACHE = "urdu-english-bible-data-v1";
