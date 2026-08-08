@@ -92,7 +92,13 @@ jobs:
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: bubblewrap build --skipPwaValidation
+        # The runner exports ANDROID_SDK_ROOT/ANDROID_HOME for its preinstalled
+        # SDK; Bubblewrap injects its own ANDROID_HOME for Gradle, and the
+        # Android Gradle Plugin fails when the two disagree. Clear the
+        # runner's values so only Bubblewrap's SDK is seen.
+        run: |
+          unset ANDROID_SDK_ROOT ANDROID_HOME
+          bubblewrap build --skipPwaValidation
 
       - name: Write signing fingerprint to summary
         env:
