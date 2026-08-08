@@ -74,8 +74,6 @@ jobs:
           curl -sSL -o /tmp/cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
           unzip -q /tmp/cmdline-tools.zip -d "$SDK_DIR"
           yes | "$SDK_DIR/cmdline-tools/bin/sdkmanager" --licenses --sdk_root="$SDK_DIR/cmdline-tools" > /dev/null
-          # Gradle compiles against this platform and won't download it itself.
-          "$SDK_DIR/cmdline-tools/bin/sdkmanager" --install "platforms;android-36" "platform-tools" --sdk_root="$SDK_DIR/cmdline-tools"
 
       - name: Configure Bubblewrap to use the runner's JDK and the SDK
         run: |
@@ -90,17 +88,24 @@ jobs:
       - name: Generate Android project from twa-manifest.json
         run: bubblewrap update --skipVersionUpgrade
 
+      # Gradle (the Android Gradle Plugin) needs a full SDK with the android-36
+      # platform. Use the runner's preinstalled SDK for that: sdk.dir in
+      # local.properties has top precedence and makes Gradle ignore the
+      # ANDROID_HOME that Bubblewrap injects (which points at its minimal SDK,
+      # used only for Bubblewrap's own zipalign/apksigner tooling).
+      - name: Point Gradle at the runner's full Android SDK
+        run: |
+          if [ ! -w "$ANDROID_HOME" ]; then sudo chown -R "$USER" "$ANDROID_HOME"; fi
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-36" > /dev/null
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "Installed platforms:" && ls "$ANDROID_HOME/platforms"
+
       - name: Build signed AAB and APK
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        # The runner exports ANDROID_SDK_ROOT/ANDROID_HOME for its preinstalled
-        # SDK; Bubblewrap injects its own ANDROID_HOME for Gradle, and the
-        # Android Gradle Plugin fails when the two disagree. Clear the
-        # runner's values so only Bubblewrap's SDK is seen.
-        run: |
-          unset ANDROID_SDK_ROOT ANDROID_HOME
-          bubblewrap build --skipPwaValidation
+        run: bubblewrap build --skipPwaValidation
 
       - name: Write signing fingerprint to summary
         env:
