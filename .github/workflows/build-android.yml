@@ -74,6 +74,8 @@ jobs:
           curl -sSL -o /tmp/cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
           unzip -q /tmp/cmdline-tools.zip -d "$SDK_DIR"
           yes | "$SDK_DIR/cmdline-tools/bin/sdkmanager" --licenses --sdk_root="$SDK_DIR/cmdline-tools" > /dev/null
+          # Gradle compiles against this platform and won't download it itself.
+          "$SDK_DIR/cmdline-tools/bin/sdkmanager" --install "platforms;android-36" "platform-tools" --sdk_root="$SDK_DIR/cmdline-tools"
 
       - name: Configure Bubblewrap to use the runner's JDK and the SDK
         run: |
