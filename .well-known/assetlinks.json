@@ -5,7 +5,7 @@
       "namespace": "android_app",
       "package_name": "com.wordonair.urduenglishbible",
       "sha256_cert_fingerprints": [
-        "REPLACE_WITH_UPLOAD_KEY_SHA256_FROM_KEYSTORE_WORKFLOW",
+        "AA:09:A5:A9:B1:55:DD:BB:00:26:2F:95:EC:22:A0:11:BD:6F:13:CE:FC:F1:00:E3:10:A8:C3:57:07:2F:9B:0A",
         "REPLACE_WITH_PLAY_APP_SIGNING_SHA256_FROM_PLAY_CONSOLE"
       ]
     }
