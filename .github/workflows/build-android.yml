@@ -1,0 +1,109 @@
+# Builds the signed Android App Bundle (AAB) for the Play Store using
+# Bubblewrap, entirely on GitHub's servers. Run it manually from the
+# Actions tab whenever you need a build; download the AAB from the
+# workflow's artifacts.
+#
+# Requires (already set up by the keystore workflow):
+#   - android/android.keystore.gpg committed to the repo
+#   - KEYSTORE_PASSWORD and KEY_PASSWORD repository secrets
+#
+# For app updates: bump appVersionCode (+1) and appVersionName in
+# twa-manifest.json, commit, then re-run this workflow.
+
+name: Android - Build signed AAB
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check prerequisites
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ ! -f android/android.keystore.gpg ]; then
+            echo "::error::android/android.keystore.gpg not found. Run the 'Android - Generate signing keystore' workflow first."
+            exit 1
+          fi
+          if [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_PASSWORD" ]; then
+            echo "::error::KEYSTORE_PASSWORD and KEY_PASSWORD repository secrets must be set."
+            exit 1
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Decrypt signing keystore
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          gpg --batch --decrypt \
+            --passphrase "$KEYSTORE_PASSWORD" \
+            --output android.keystore \
+            android/android.keystore.gpg
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Configure Bubblewrap to use the runner's JDK and Android SDK
+        run: |
+          mkdir -p ~/.bubblewrap
+          cat > ~/.bubblewrap/config.json <<EOF
+          {
+            "jdkPath": "$JAVA_HOME",
+            "androidSdkPath": "$ANDROID_HOME"
+          }
+          EOF
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      - name: Generate Android project from twa-manifest.json
+        run: bubblewrap update --skipVersionUpgrade
+
+      - name: Build signed AAB and APK
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: bubblewrap build --skipPwaValidation
+
+      - name: Write signing fingerprint to summary
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          FP=$(keytool -list -v -keystore android.keystore -alias android -storepass "$KEYSTORE_PASSWORD" | grep "SHA256:" | sed 's/.*SHA256: //')
+          {
+            echo "## Build complete"
+            echo ""
+            echo "Upload key SHA-256 fingerprint (must be in .well-known/assetlinks.json):"
+            echo ""
+            echo '```'
+            echo "$FP"
+            echo '```'
+            echo ""
+            echo "Download the AAB from this run's Artifacts and upload it in Play Console."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: |
+            app-release-bundle.aab
+            app-release-signed.apk
+          if-no-files-found: error

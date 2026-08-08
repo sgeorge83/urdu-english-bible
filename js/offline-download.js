@@ -31,6 +31,15 @@ export async function downloadFullBible(onProgress) {
     throw new Error("Offline storage is not supported in this browser");
   }
 
+  // Ask the browser to mark this origin's storage as persistent so the
+  // downloaded Bible is never evicted under storage pressure. Best-effort:
+  // some browsers deny or don't support it, and the download works anyway.
+  try {
+    await navigator.storage?.persist?.();
+  } catch {
+    /* non-fatal */
+  }
+
   const books = await loadBooks();
   const cache = await caches.open(DATA_CACHE);
 

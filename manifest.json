@@ -1,6 +1,9 @@
 {
+  "id": "./",
   "name": "Urdu English Bible",
   "short_name": "Bible",
+  "lang": "en",
+  "categories": ["books", "education"],
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

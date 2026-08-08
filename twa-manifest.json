@@ -1,0 +1,42 @@
+{
+  "packageId": "com.wordonair.urduenglishbible",
+  "host": "urduenglishbible.wordonair.com",
+  "name": "Urdu English Bible",
+  "launcherName": "Bible",
+  "display": "standalone",
+  "themeColor": "#f4ecd8",
+  "themeColorDark": "#1a1a1a",
+  "navigationColor": "#f4ecd8",
+  "navigationColorDark": "#1a1a1a",
+  "navigationDividerColor": "#dccfb8",
+  "navigationDividerColorDark": "#333333",
+  "backgroundColor": "#f4ecd8",
+  "enableNotifications": false,
+  "startUrl": "/index.html",
+  "iconUrl": "https://urduenglishbible.wordonair.com/icons/icon-512.png",
+  "maskableIconUrl": "https://urduenglishbible.wordonair.com/icons/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://urduenglishbible.wordonair.com/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://urduenglishbible.wordonair.com/",
+  "minSdkVersion": 21,
+  "orientation": "default",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": []
+}
