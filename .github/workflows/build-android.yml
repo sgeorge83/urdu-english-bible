@@ -62,27 +62,28 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Configure Bubblewrap to use the runner's JDK and Android SDK
+      # Bubblewrap's androidSdkPath must point at an Android *command-line
+      # tools* folder (it checks for a tools/ or bin/ subdirectory) — not the
+      # runner's preinstalled SDK root. Install cmdline-tools the same way
+      # Bubblewrap does for itself and pre-accept the licenses so the
+      # build-tools install doesn't prompt.
+      - name: Set up Android command-line tools for Bubblewrap
+        run: |
+          SDK_DIR="$HOME/bubblewrap-sdk"
+          mkdir -p "$SDK_DIR"
+          curl -sSL -o /tmp/cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+          unzip -q /tmp/cmdline-tools.zip -d "$SDK_DIR"
+          yes | "$SDK_DIR/cmdline-tools/bin/sdkmanager" --licenses --sdk_root="$SDK_DIR/cmdline-tools" > /dev/null
+
+      - name: Configure Bubblewrap to use the runner's JDK and the SDK
         run: |
           mkdir -p ~/.bubblewrap
           cat > ~/.bubblewrap/config.json <<EOF
           {
             "jdkPath": "$JAVA_HOME",
-            "androidSdkPath": "$ANDROID_HOME"
+            "androidSdkPath": "$HOME/bubblewrap-sdk/cmdline-tools"
           }
           EOF
-
-      # Bubblewrap validates that the SDK contains platform-tools/, platforms/,
-      # build-tools/ AND licenses/. The runner's SDK dir isn't writable by the
-      # runner user, so 'sdkmanager --licenses' can't create licenses/ — write
-      # the standard accepted-license hashes with sudo instead.
-      - name: Accept Android SDK licenses
-        run: |
-          sudo mkdir -p "$ANDROID_HOME/licenses"
-          printf '\n24333f8a63b6825ea9c5514f83c2829b004d1fee\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e\n' | sudo tee "$ANDROID_HOME/licenses/android-sdk-license" > /dev/null
-          printf '\n84831b9409646a918e30573bab4c9c91346d8abd\n' | sudo tee "$ANDROID_HOME/licenses/android-sdk-preview-license" > /dev/null
-          echo "SDK contents:"
-          ls "$ANDROID_HOME"
 
       - name: Generate Android project from twa-manifest.json
         run: bubblewrap update --skipVersionUpgrade
