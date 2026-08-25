@@ -40,7 +40,18 @@ jobs:
           unzip -l windows-release/windows-store.zip
 
       - name: Extract packages
-        run: unzip -o windows-release/windows-store.zip -d windows-release
+        run: |
+          set +e
+          unzip -o windows-release/windows-store.zip -d windows-release
+          status=$?
+          set -e
+          # Info-ZIP exits 1 for warnings (PWABuilder zips use backslash paths).
+          if [ "$status" -gt 1 ]; then
+            echo "::error::unzip failed with exit code $status"
+            exit "$status"
+          fi
+          test -f "windows-release/Urdu English Bible.msixbundle"
+          test -f "windows-release/Urdu English Bible.classic.appxbundle"
 
       - name: Write summary
         run: |
