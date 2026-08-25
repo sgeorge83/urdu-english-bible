@@ -29,5 +29,42 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "screenshots": [
+    {
+      "src": "store/screenshots/01-library.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Library with English and Urdu book names"
+    },
+    {
+      "src": "store/screenshots/02-reader-john-1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Verse-by-verse Urdu and English reader"
+    },
+    {
+      "src": "store/screenshots/03-reader-psalm-23-night.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Night theme in the reader"
+    },
+    {
+      "src": "store/screenshots/04-reading-plan.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Daily reading plan"
+    },
+    {
+      "src": "store/screenshots/05-reading-settings.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Font size, theme, and layout settings"
+    }
   ]
 }

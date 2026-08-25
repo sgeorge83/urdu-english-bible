@@ -58,6 +58,10 @@ The workflow uses `enablement: true` so the first run can create the Pages site.
 
 Live URL: **https://urduenglishbible.wordonair.com/** (custom domain on GitHub Pages; the old github.io address redirects here)
 
+Store listings (same PWA): [Play Store](docs/PLAY_STORE.md) · [Microsoft Store](docs/MICROSOFT_STORE.md)
+
+Windows Store packages: Actions → **Windows - Build Store package** (or use the generated files in a local `windows-release/` folder; do not commit them).
+
 ## Attribution
 
 Project of WordOnAir Labs · Urdu Geo Version · World English Bible

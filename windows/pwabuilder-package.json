@@ -1,0 +1,15 @@
+{
+  "name": "Urdu English Bible",
+  "packageId": "WordOnAirLabs.UrduEnglishBible",
+  "url": "https://urduenglishbible.wordonair.com/",
+  "version": "1.0.1",
+  "allowSigning": true,
+  "publisher": {
+    "displayName": "WordOnAir Labs",
+    "commonName": "CN=5144E98A-1B05-48A3-97EA-086D7DF840DF"
+  },
+  "classicPackage": {
+    "generate": true,
+    "version": "1.0.0"
+  }
+}

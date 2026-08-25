@@ -1,0 +1,67 @@
+# Builds Microsoft Store packages via PWABuilder's hosted Windows packager.
+# Run from Actions → "Windows - Build Store package" → download the
+# windows-release artifact. Upload *.msixbundle and *.classic.appxbundle
+# in Partner Center; do not upload *.sideload.msix.
+#
+# Identity: windows/pwabuilder-package.json
+# For updates: bump version (and keep classicPackage.version lower), commit, re-run.
+
+name: Windows - Build Store package
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate MSIX zip from PWABuilder
+        run: |
+          set -euo pipefail
+          mkdir -p windows-release
+          HTTP_CODE=$(curl -sS -o windows-release/windows-store.zip -w "%{http_code}" \
+            -X POST "https://pwabuilder-windows-docker.azurewebsites.net/msix/generatezip" \
+            -H "Content-Type: application/json" \
+            --data-binary @windows/pwabuilder-package.json \
+            --max-time 180)
+          echo "HTTP $HTTP_CODE"
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "::error::PWABuilder packaging failed (HTTP $HTTP_CODE). The hosted service may be down; retry later."
+            head -c 4000 windows-release/windows-store.zip || true
+            exit 1
+          fi
+          file windows-release/windows-store.zip
+          unzip -l windows-release/windows-store.zip
+
+      - name: Extract packages
+        run: unzip -o windows-release/windows-store.zip -d windows-release
+
+      - name: Write summary
+        run: |
+          {
+            echo "## Windows Store package"
+            echo ""
+            echo "Upload **both** \`.msixbundle\` and \`.classic.appxbundle\` in Partner Center for Store ID \`9PD8J39KRQTT\`."
+            echo "Do **not** upload \`.sideload.msix\`."
+            echo ""
+            echo '```'
+            unzip -l windows-release/windows-store.zip
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          if-no-files-found: error
+          path: |
+            windows-release/*.msixbundle
+            windows-release/*.appxbundle
+            windows-release/*.msix
+            windows-release/windows-store.zip
