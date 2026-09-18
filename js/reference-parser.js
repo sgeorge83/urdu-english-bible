@@ -10,21 +10,32 @@ function buildBookLookup() {
     lookup.push({ id: Number(id), name, pattern: name });
   }
   lookup.push({ id: 19, name: "Psalms", pattern: "Psalm" });
+  lookup.push({ id: 1, name: "Genesis", pattern: "Gen." });
   lookup.sort((a, b) => b.pattern.length - a.pattern.length);
   return lookup;
 }
 
 const BOOK_LOOKUP = buildBookLookup();
+const SINGLE_CHAPTER_BOOK_IDS = new Set([31, 57, 63, 64, 65]);
 
 function matchBook(segment) {
+  const trimmed = segment.trim();
   for (const entry of BOOK_LOOKUP) {
-    const re = new RegExp(`^${escapeRegex(entry.pattern)}\\s+(.+)$`, "i");
-    const match = segment.trim().match(re);
+    const withRest = new RegExp(`^${escapeRegex(entry.pattern)}\\s+(.+)$`, "i");
+    const match = trimmed.match(withRest);
     if (match) {
       return {
         bookId: entry.id,
         bookName: ENGLISH_BOOK_NAMES[entry.id] ?? entry.name,
         rest: match[1].trim(),
+      };
+    }
+    const bookOnly = new RegExp(`^${escapeRegex(entry.pattern)}$`, "i");
+    if (bookOnly.test(trimmed)) {
+      return {
+        bookId: entry.id,
+        bookName: ENGLISH_BOOK_NAMES[entry.id] ?? entry.name,
+        rest: "",
       };
     }
   }
@@ -72,6 +83,49 @@ function parseRest(bookId, bookName, rest) {
         verseStart: 1,
         verseEnd: null,
         label: `${bookName} ${chapter}`,
+      });
+    }
+    return specs;
+  }
+
+  match = rest.match(/^(\d+):(\d+)-(\d+):(\d+)$/);
+  if (match) {
+    const startChapter = Number(match[1]);
+    const startVerse = Number(match[2]);
+    const endChapter = Number(match[3]);
+    const endVerse = Number(match[4]);
+
+    specs.push({
+      bookId,
+      bookName,
+      chapter: startChapter,
+      verseStart: startVerse,
+      verseEnd: startChapter === endChapter ? endVerse : null,
+      label:
+        startChapter === endChapter
+          ? `${bookName} ${startChapter}:${startVerse}-${endVerse}`
+          : `${bookName} ${startChapter}:${startVerse}-`,
+    });
+
+    for (let chapter = startChapter + 1; chapter < endChapter; chapter += 1) {
+      specs.push({
+        bookId,
+        bookName,
+        chapter,
+        verseStart: 1,
+        verseEnd: null,
+        label: `${bookName} ${chapter}`,
+      });
+    }
+
+    if (endChapter > startChapter) {
+      specs.push({
+        bookId,
+        bookName,
+        chapter: endChapter,
+        verseStart: 1,
+        verseEnd: endVerse,
+        label: `${bookName} ${endChapter}:1-${endVerse}`,
       });
     }
     return specs;
@@ -133,6 +187,20 @@ export function parseReferenceString(reference) {
     const matched = matchBook(segment);
     if (!matched) {
       throw new Error(`Unknown book in reference: ${segment}`);
+    }
+    if (!matched.rest) {
+      if (!SINGLE_CHAPTER_BOOK_IDS.has(matched.bookId)) {
+        throw new Error(`Cannot parse reference segment: ${matched.bookName}`);
+      }
+      specs.push({
+        bookId: matched.bookId,
+        bookName: matched.bookName,
+        chapter: 1,
+        verseStart: 1,
+        verseEnd: null,
+        label: matched.bookName,
+      });
+      continue;
     }
     specs.push(...parseRest(matched.bookId, matched.bookName, matched.rest));
   }
